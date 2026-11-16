@@ -1,0 +1,1495 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendario Formativo: Programa Completo Python, Datos, Web & SQL (2026–2027)</title>
+    
+    <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- html2canvas para descargar el calendario como imagen PNG -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <!-- Configuración personalizada de Tailwind -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    },
+                    colors: {
+                        python: {
+                            blue: '#306998',
+                            darkBlue: '#1e415e',
+                            yellow: '#FFD43B',
+                            amber: '#f59e0b',
+                            slate: '#0f172a',
+                            card: '#1e293b'
+                        }
+                    },
+                    boxShadow: {
+                        'glow-blue': '0 0 40px -10px rgba(56, 189, 248, 0.25)',
+                        'glow-yellow': '0 0 40px -10px rgba(250, 204, 21, 0.2)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Fondo sutil con patrón de cuadrícula técnica */
+        .bg-grid-pattern {
+            background-size: 32px 32px;
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        }
+
+        /* Estilos optimizados para impresión */
+        @media print {
+            body {
+                background-color: #ffffff !important;
+                color: #0f172a !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            #capture-area {
+                background: #ffffff !important;
+                box-shadow: none !important;
+                border: none !important;
+                padding: 0 !important;
+            }
+            .session-card {
+                background-color: #f8fafc !important;
+                border: 1px solid #cbd5e1 !important;
+                color: #0f172a !important;
+                break-inside: avoid;
+            }
+            .week-section {
+                break-inside: avoid;
+            }
+            .text-white, .text-slate-100, .text-slate-200 {
+                color: #0f172a !important;
+            }
+            .text-slate-300, .text-slate-400 {
+                color: #475569 !important;
+            }
+        }
+
+        /* Animación suave para el modal */
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.96) translateY(8px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .animate-modal {
+            animation: modalFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans antialiased min-h-screen bg-grid-pattern selection:bg-amber-400 selection:text-slate-950">
+
+    <!-- Elementos decorativos ambientales -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none z-0 no-print">
+        <div class="absolute -top-40 -left-40 w-96 h-96 bg-sky-500/15 rounded-full blur-3xl"></div>
+        <div class="absolute top-20 right-10 w-80 h-80 bg-amber-400/10 rounded-full blur-3xl"></div>
+        <div class="absolute bottom-10 left-1/3 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl"></div>
+    </div>
+
+    <!-- Contenedor Principal -->
+    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+
+        <!-- Barra de Herramientas / Controles Superiores (No se incluye en la captura PNG ni impresión) -->
+        <div class="no-print flex flex-col gap-3.5 mb-8 bg-slate-900/85 backdrop-blur-md border border-slate-800/80 p-4 rounded-2xl shadow-lg">
+            
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                <!-- Selector de Vista -->
+                <div class="flex items-center bg-slate-950/90 p-1 rounded-xl border border-slate-800 w-full md:w-auto justify-center">
+                    <button id="btn-view-grid" onclick="setView('grid')" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all bg-sky-500/20 text-sky-300 border border-sky-500/30 shadow-sm cursor-pointer">
+                        <i data-lucide="layout-grid" class="w-4 h-4"></i>
+                        <span>Vista por Semanas</span>
+                    </button>
+                    <button id="btn-view-timeline" onclick="setView('timeline')" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-slate-200 transition-all cursor-pointer">
+                        <i data-lucide="list-ordered" class="w-4 h-4"></i>
+                        <span>Agenda Cronológica</span>
+                    </button>
+                </div>
+
+                <!-- Acciones de Exportación -->
+                <div class="flex flex-wrap items-center justify-center gap-2.5 w-full md:w-auto">
+                    <button onclick="downloadPNG()" id="btn-download-png" class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 text-slate-950 shadow-md shadow-amber-500/10 transition-all active:scale-95 cursor-pointer">
+                        <i data-lucide="image-down" class="w-4 h-4"></i>
+                        <span>Descargar PNG</span>
+                    </button>
+                    
+                    <button onclick="downloadFilteredICS()" id="btn-download-ics" class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-slate-800 hover:bg-slate-700 text-slate-100 border border-slate-700 transition-all active:scale-95 cursor-pointer" title="Descargar calendario .ics de la selección actual">
+                        <i data-lucide="calendar-plus" class="w-4 h-4 text-emerald-400"></i>
+                        <span id="ics-btn-label">Exportar .ICS (20)</span>
+                    </button>
+
+                    <button onclick="window.print()" class="flex items-center gap-2 p-2.5 rounded-xl text-sm font-semibold bg-slate-800/70 hover:bg-slate-700 text-slate-300 border border-slate-700/70 transition-all active:scale-95 cursor-pointer" title="Imprimir o guardar como PDF">
+                        <i data-lucide="printer" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Barra de Filtros: Semanas y Bloques Temáticos -->
+            <div class="pt-3 border-t border-slate-800/80 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                <!-- Filtro por Semana -->
+                <div class="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0">
+                    <span class="text-[11px] font-mono uppercase tracking-wider text-slate-500 mr-1 shrink-0">Semana:</span>
+                    <div id="week-filters" class="flex items-center gap-1.5">
+                        <!-- Renderizado dinámico -->
+                    </div>
+                </div>
+
+                <!-- Filtro por Bloque Temático -->
+                <div class="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0">
+                    <span class="text-[11px] font-mono uppercase tracking-wider text-slate-500 mr-1 shrink-0">Bloque:</span>
+                    <div id="track-filters" class="flex items-center gap-1.5">
+                        <!-- Renderizado dinámico -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ÁREA CAPTURABLE PARA PNG / PRESENTACIÓN -->
+        <div id="capture-area" class="bg-slate-900/60 backdrop-blur-xl border border-slate-800/90 rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-hidden">
+            
+            <!-- Acento superior tricolor estilo Python -->
+            <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-sky-500 via-amber-400 to-emerald-400"></div>
+
+            <!-- Cabecera del Calendario -->
+            <header class="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-8 mb-8 border-b border-slate-800/80">
+                <div class="space-y-3">
+                    <div class="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-sky-500/10 border border-sky-400/20 text-sky-300 font-mono text-xs font-semibold tracking-wide">
+                        <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                        <span>PROGRAMA COMPLETO · NOVIEMBRE 2026 – ENERO 2027</span>
+                    </div>
+                    
+                    <div class="flex items-center gap-3.5">
+                        <!-- Logo minimalista Python SVG -->
+                        <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700/80 flex items-center justify-center shadow-inner shrink-0">
+                            <svg class="w-8 h-8" viewBox="0 0 110 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M54.3 4C28.8 4 30.4 15 30.4 15L30.5 26.4H54.8V29.8H20.8C20.8 29.8 4 27.9 4 54.4C4 80.9 18.7 80 18.7 80H27.4V67.7C27.4 67.7 26.9 53 41.9 53H66.5C66.5 53 80.4 53.2 80.4 39.6V17.4C80.4 17.4 82.5 4 54.3 4ZM41 11.7C43.5 11.7 45.5 13.7 45.5 16.2C45.5 18.7 43.5 20.7 41 20.7C38.5 20.7 36.5 18.7 36.5 16.2C36.5 13.7 38.5 11.7 41 11.7Z" fill="#38BDF8"/>
+                                <path d="M55.7 106C81.2 106 79.6 95 79.6 95L79.5 83.6H55.2V80.2H89.2C89.2 80.2 106 82.1 106 55.6C106 29.1 91.3 30 91.3 30H82.6V42.3C82.6 42.3 83.1 57 68.1 57H43.5C43.5 57 29.6 56.8 29.6 70.4V92.6C29.6 92.6 27.5 106 55.7 106ZM69 98.3C66.5 98.3 64.5 96.3 64.5 93.8C64.5 91.3 66.5 89.3 69 89.3C71.5 89.3 73.5 91.3 73.5 93.8C73.5 96.3 71.5 98.3 69 98.3Z" fill="#FACC15"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h1 class="text-2xl sm:text-4xl font-extrabold tracking-tight text-white">
+                                Píldoras Formativas: <span class="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-amber-300 to-emerald-400">Python, Datos, Web & SQL</span>
+                            </h1>
+                            <p class="text-slate-400 text-sm sm:text-base mt-1">
+                                Itinerario intensivo de 6 semanas · Del 23 de noviembre de 2026 al 14 de enero de 2027
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resumen estadístico / Metadatos rápidos -->
+                <div class="flex flex-wrap items-center gap-3 sm:gap-4 bg-slate-950/60 border border-slate-800/80 px-4 py-3 rounded-2xl shrink-0">
+                    <div class="flex items-center gap-2.5 pr-3 border-r border-slate-800">
+                        <div class="p-2 rounded-lg bg-sky-500/15 text-sky-400">
+                            <i data-lucide="calendar-range" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <div class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">Duración</div>
+                            <div class="text-sm font-bold text-slate-100 font-mono">6 Semanas</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2.5 pr-3 border-r border-slate-800">
+                        <div class="p-2 rounded-lg bg-amber-400/15 text-amber-400">
+                            <i data-lucide="layers" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <div class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">Sesiones</div>
+                            <div id="stats-sessions-count" class="text-sm font-bold text-slate-100">20 Píldoras</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2.5">
+                        <div class="p-2 rounded-lg bg-emerald-500/15 text-emerald-400">
+                            <i data-lucide="users" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <div class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">Ponentes</div>
+                            <div id="stats-speakers-count" class="text-sm font-bold text-slate-100">20 Expertos</div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Contenedor Dinámico de Píldoras (Agrupado por Semanas o Cronológico) -->
+            <main id="sessions-container" class="space-y-10">
+                <!-- Las semanas y tarjetas se renderizan dinámicamente desde JS -->
+            </main>
+
+            <!-- Pie del calendario -->
+            <footer class="mt-10 pt-6 border-t border-slate-800/80 flex flex-col lg:flex-row items-center justify-between gap-4 text-xs text-slate-400">
+                <div class="flex items-center gap-2 font-mono">
+                    <span class="text-emerald-400">>>></span>
+                    <span>Haz clic en cualquier píldora para ver su temario, ejemplo de código y descargar su invitación</span>
+                </div>
+                <div class="flex flex-wrap items-center justify-center gap-4">
+                    <span class="inline-flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-sky-400"></span> Python Core
+                    </span>
+                    <span class="inline-flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400"></span> Datos & Stats
+                    </span>
+                    <span class="inline-flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-violet-400"></span> Web & APIs
+                    </span>
+                    <span class="inline-flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-amber-400"></span> Git & SQL
+                    </span>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <!-- MODAL DE DETALLE DE SESIÓN -->
+    <div id="session-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm" onclick="closeModalOnBackdrop(event)">
+        <div class="bg-slate-900 border border-slate-700/90 rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl animate-modal relative overflow-hidden">
+            <!-- Barra superior de color dinámico -->
+            <div id="modal-accent-bar" class="absolute top-0 left-0 right-0 h-1.5 bg-sky-400"></div>
+
+            <!-- Botón cerrar -->
+            <button onclick="closeModal()" class="absolute top-5 right-5 p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors cursor-pointer" aria-label="Cerrar ventana">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+
+            <!-- Contenido del Modal -->
+            <div id="modal-content"></div>
+        </div>
+    </div>
+
+    <!-- NOTIFICACIÓN TOAST -->
+    <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+        <div class="flex items-center gap-3 bg-slate-800 border border-slate-700 text-white px-4 py-3 rounded-2xl shadow-xl">
+            <div id="toast-icon" class="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400">
+                <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+            </div>
+            <span id="toast-message" class="text-sm font-medium">Acción completada</span>
+        </div>
+    </div>
+
+    <!-- LÓGICA DE APLICACIÓN -->
+    <script>
+        // Metadatos de las 6 semanas
+        const weeksMeta = {
+            1: {
+                number: 1,
+                title: "Semana 1 · Fundamentos de Python",
+                dateRange: "23 – 26 Noviembre 2026",
+                subtitle: "Primeros pasos, tipos de datos, strings, colecciones y estructuras condicionales"
+            },
+            2: {
+                number: 2,
+                title: "Semana 2 · Lógica, Paradigmas y NumPy",
+                dateRange: "30 Noviembre – 03 Diciembre 2026",
+                subtitle: "Bucles, funciones, manejo de errores, paradigmas y computación numérica"
+            },
+            3: {
+                number: 3,
+                title: "Semana 3 · Estadística y Visualización",
+                dateRange: "09 – 10 Diciembre 2026",
+                subtitle: "Análisis estadístico descriptivo y representación gráfica con Matplotlib"
+            },
+            4: {
+                number: 4,
+                title: "Semana 4 · Web, JSON, Scraping y Git",
+                dateRange: "14 – 17 Diciembre 2026",
+                subtitle: "Protocolo HTTP, APIs JSON, extracción web y control de versiones colaborativo"
+            },
+            5: {
+                number: 5,
+                title: "Semana 5 · Pandas y Limpieza de Datos",
+                dateRange: "21 – 22 Diciembre 2026",
+                subtitle: "Manipulación tabular con DataFrames y procesos ETL de depuración"
+            },
+            6: {
+                number: 6,
+                title: "Semana 6 · SQL y APIs REST",
+                dateRange: "11 – 14 Enero 2027",
+                subtitle: "Bases de datos relacionales, consultas SQL y arquitectura de servicios REST"
+            }
+        };
+
+        // Temas visuales por bloque temático
+        const trackThemes = {
+            "Python Core": {
+                badgeBg: "bg-sky-500/15",
+                badgeText: "text-sky-300",
+                badgeBorder: "border-sky-500/30",
+                avatarBg: "from-sky-400 to-blue-600",
+                accentBar: "bg-gradient-to-r from-sky-400 to-blue-500",
+                cardHoverBorder: "hover:border-sky-500/50",
+                iconColor: "text-sky-400",
+                dotColor: "bg-sky-400"
+            },
+            "Datos & Stats": {
+                badgeBg: "bg-emerald-500/15",
+                badgeText: "text-emerald-300",
+                badgeBorder: "border-emerald-500/30",
+                avatarBg: "from-emerald-400 to-teal-600",
+                accentBar: "bg-gradient-to-r from-emerald-400 to-teal-500",
+                cardHoverBorder: "hover:border-emerald-500/50",
+                iconColor: "text-emerald-400",
+                dotColor: "bg-emerald-400"
+            },
+            "Web & APIs": {
+                badgeBg: "bg-violet-500/15",
+                badgeText: "text-violet-300",
+                badgeBorder: "border-violet-500/30",
+                avatarBg: "from-violet-400 to-purple-600",
+                accentBar: "bg-gradient-to-r from-violet-400 to-purple-500",
+                cardHoverBorder: "hover:border-violet-500/50",
+                iconColor: "text-violet-400",
+                dotColor: "bg-violet-400"
+            },
+            "Git & SQL": {
+                badgeBg: "bg-amber-400/15",
+                badgeText: "text-amber-300",
+                badgeBorder: "border-amber-400/30",
+                avatarBg: "from-amber-400 to-orange-500",
+                accentBar: "bg-gradient-to-r from-amber-400 to-orange-500",
+                cardHoverBorder: "hover:border-amber-400/50",
+                iconColor: "text-amber-400",
+                dotColor: "bg-amber-400"
+            }
+        };
+
+        // Programa completo de 20 píldoras formativas
+        const sessionsData = [
+            // --- SEMANA 1 ---
+            {
+                id: 1,
+                week: 1,
+                pillNumber: "01",
+                dayName: "LUNES",
+                shortDay: "LUN",
+                dateStr: "23/11/2026",
+                dayNumber: "23",
+                monthShort: "NOV",
+                isoDate: "20261123",
+                speaker: "Susana",
+                initials: "SU",
+                track: "Python Core",
+                title: "Intro a Python I: Tipos de datos y variables",
+                concepts: ["int", "float", "str", "bool", "variables"],
+                codeLang: "Python 3.x",
+                codeFilename: "01_tipos_variables.py",
+                codeSnippet: 'nombre = "Susana"\nedad = 29\nactivo = True\nprint(type(nombre), type(edad))',
+                summary: "Primera toma de contacto con Python. Aprenderemos cómo almacenar información en variables, las convenciones PEP 8 y los tipos de datos primitivos.",
+                objectives: [
+                    "Declaración y asignación dinámica de variables en memoria.",
+                    "Diferencias entre enteros (int), decimales (float), textos (str) y booleanos (bool).",
+                    "Inspección de tipos con type() y conversión explícita (casting)."
+                ]
+            },
+            {
+                id: 2,
+                week: 1,
+                pillNumber: "02",
+                dayName: "MARTES",
+                shortDay: "MAR",
+                dateStr: "24/11/2026",
+                dayNumber: "24",
+                monthShort: "NOV",
+                isoDate: "20261124",
+                speaker: "Oscar",
+                initials: "OS",
+                track: "Python Core",
+                title: "Intro a Python II: Operaciones básicas y operaciones con strings",
+                concepts: ["+ - * /", "// % **", "f-strings", "slicing", ".split()"],
+                codeLang: "Python 3.x",
+                codeFilename: "02_operaciones_strings.py",
+                codeSnippet: 'curso = "  python data  "\nlimpio = curso.strip().title()\nprint(f"Bienvenido a {limpio} | 2^8 = {2**8}")',
+                summary: "Dominaremos el cálculo aritmético y la manipulación avanzada de cadenas de texto, una de las herramientas más expresivas de Python.",
+                objectives: [
+                    "Operadores aritméticos, división entera (//), módulo (%) y potencia (**).",
+                    "Indexación, extracción de subcadenas (slicing) y concatenación.",
+                    "Formateo moderno con f-strings y métodos esenciales (.strip, .replace, .split)."
+                ]
+            },
+            {
+                id: 3,
+                week: 1,
+                pillNumber: "03",
+                dayName: "MIÉRCOLES",
+                shortDay: "MIÉ",
+                dateStr: "25/11/2026",
+                dayNumber: "25",
+                monthShort: "NOV",
+                isoDate: "20261125",
+                speaker: "Karen",
+                initials: "KA",
+                track: "Python Core",
+                title: "Intro a Python III: Estructuras de datos (Tuplas, listas, diccionarios y sets)",
+                concepts: ["list []", "tuple ()", "dict {}", "set()"],
+                codeLang: "Python 3.x",
+                codeFilename: "03_estructuras_datos.py",
+                codeSnippet: 'stack = ["Python", "SQL", "Pandas"]\nperfil = {"ponente": "Karen", "modulos": 4}\nunicos = set([1, 2, 2, 3])  # {1, 2, 3}',
+                summary: "Exploraremos las cuatro colecciones nativas de Python para organizar, agrupar y consultar conjuntos complejos de información.",
+                objectives: [
+                    "Listas (mutables) vs. Tuplas (inmutables): cuándo elegir cada estructura.",
+                    "Diccionarios clave-valor para búsquedas rápidas y datos estructurados.",
+                    "Sets (conjuntos) para eliminar duplicados y operar con intersecciones."
+                ]
+            },
+            {
+                id: 4,
+                week: 1,
+                pillNumber: "04",
+                dayName: "JUEVES",
+                shortDay: "JUE",
+                dateStr: "26/11/2026",
+                dayNumber: "26",
+                monthShort: "NOV",
+                isoDate: "20261126",
+                speaker: "Roberto",
+                initials: "RO",
+                track: "Python Core",
+                title: "Lógica de programación en Python I: Condicionales",
+                concepts: ["if", "elif", "else", "and / or / not", "== !="],
+                codeLang: "Python 3.x",
+                codeFilename: "04_condicionales.py",
+                codeSnippet: 'nota = 8.5\nif nota >= 9:\n    nivel = "Sobresaliente"\nelif nota >= 5:\n    nivel = "Aprobado"\nelse:\n    nivel = "Pendiente"',
+                summary: "Daremos capacidad de decisión a nuestros programas mediante estructuras de control de flujo y evaluación de expresiones booleanas.",
+                objectives: [
+                    "Operadores relacionales y lógicos compuestos (and, or, not).",
+                    "Sintaxis e indentación limpia en bloques if, elif y else.",
+                    "Condicionales anidados y operadores ternarios legibles."
+                ]
+            },
+
+            // --- SEMANA 2 ---
+            {
+                id: 5,
+                week: 2,
+                pillNumber: "05",
+                dayName: "LUNES",
+                shortDay: "LUN",
+                dateStr: "30/11/2026",
+                dayNumber: "30",
+                monthShort: "NOV",
+                isoDate: "20261130",
+                speaker: "Alejandra",
+                initials: "AL",
+                track: "Python Core",
+                title: "Lógica de programación en Python II: Bucles",
+                concepts: ["for", "while", "range()", "enumerate()", "break / continue"],
+                codeLang: "Python 3.x",
+                codeFilename: "05_bucles.py",
+                codeSnippet: 'lenguajes = ["Python", "SQL", "R"]\nfor idx, lang in enumerate(lenguajes, start=1):\n    print(f"{idx}. {lang}")',
+                summary: "Automatizaremos tareas repetitivas recorriendo secuencias y controlando iteraciones con precisión mediante bucles for y while.",
+                objectives: [
+                    "Iteración sobre listas, diccionarios y rangos numéricos con for y range().",
+                    "Bucles condicionales while y prevención de bucles infinitos.",
+                    "Uso idiomático de enumerate(), zip(), break y continue."
+                ]
+            },
+            {
+                id: 6,
+                week: 2,
+                pillNumber: "06",
+                dayName: "MARTES",
+                shortDay: "MAR",
+                dateStr: "01/12/2026",
+                dayNumber: "01",
+                monthShort: "DIC",
+                isoDate: "20261201",
+                speaker: "Sara",
+                initials: "SA",
+                track: "Python Core",
+                title: "Lógica de programación en Python III: Funciones y manejo de excepciones",
+                concepts: ["def", "return", "*args / **kwargs", "try / except", "finally"],
+                codeLang: "Python 3.x",
+                codeFilename: "06_funciones_excepciones.py",
+                codeSnippet: 'def dividir(a: float, b: float) -> float:\n    try:\n        return round(a / b, 2)\n    except ZeroDivisionError:\n        return 0.0',
+                summary: "Modularizaremos nuestro código en funciones reutilizables y blindaremos la ejecución frente a errores inesperados en tiempo de ejecución.",
+                objectives: [
+                    "Definición de funciones con parámetros posicionales, por defecto y retorno.",
+                    "Ámbito de variables (scope local vs. global) y docstrings.",
+                    "Captura controlada de errores con bloques try, except, else y finally."
+                ]
+            },
+            {
+                id: 7,
+                week: 2,
+                pillNumber: "07",
+                dayName: "MIÉRCOLES",
+                shortDay: "MIÉ",
+                dateStr: "02/12/2026",
+                dayNumber: "02",
+                monthShort: "DIC",
+                isoDate: "20261202",
+                speaker: "Nayibeth",
+                initials: "NA",
+                track: "Python Core",
+                title: "Fundamentos de la programación: Paradigma Imperativo Vs. Paradigma Declarativo",
+                concepts: ["Imperativo", "Declarativo", "Comprehensions", "map / filter", "Legibilidad"],
+                codeLang: "Python 3.x",
+                codeFilename: "07_imperativo_vs_declarativo.py",
+                codeSnippet: '# Imperativo vs Declarativo\nnums = [1, 2, 3, 4, 5]\npares_decl = [n**2 for n in nums if n % 2 == 0]',
+                summary: "Compararemos el enfoque paso a paso (cómo hacerlo) frente al enfoque expresivo (qué resultado queremos), aplicando herramientas declarativas en Python.",
+                objectives: [
+                    "Diferencias conceptuales entre programación imperativa y declarativa.",
+                    "Transformación de bucles tradicionales en List/Dict Comprehensions.",
+                    "Introducción a funciones de orden superior como map(), filter() y expresiones generadoras."
+                ]
+            },
+            {
+                id: 8,
+                week: 2,
+                pillNumber: "08",
+                dayName: "JUEVES",
+                shortDay: "JUE",
+                dateStr: "03/12/2026",
+                dayNumber: "03",
+                monthShort: "DIC",
+                isoDate: "20261203",
+                speaker: "Violeta",
+                initials: "VI",
+                track: "Datos & Stats",
+                title: "Introducción a Numpy: creación de arrays y operaciones vectorizadas básicas",
+                concepts: ["np.array", "shape / dtype", "vectorización", "broadcasting"],
+                codeLang: "Python · NumPy",
+                codeFilename: "08_intro_numpy.py",
+                codeSnippet: 'import numpy as np\nprecios = np.array([10.0, 25.5, 40.0])\ncon_iva = precios * 1.21  # Vectorizado sin bucles',
+                summary: "Daremos el salto al ecosistema científico de Python con NumPy, comprendiendo por qué los ndarrays superan en velocidad a las listas nativas.",
+                objectives: [
+                    "Creación de arrays multidimensionales (array, zeros, arange, linspace).",
+                    "Atributos clave de un ndarray: shape, ndim, size y dtype.",
+                    "Operaciones aritméticas vectorizadas y fundamentos de broadcasting."
+                ]
+            },
+
+            // --- SEMANA 3 ---
+            {
+                id: 9,
+                week: 3,
+                pillNumber: "09",
+                dayName: "MIÉRCOLES",
+                shortDay: "MIÉ",
+                dateStr: "09/12/2026",
+                dayNumber: "09",
+                monthShort: "DIC",
+                isoDate: "20261209",
+                speaker: "María Pilar",
+                initials: "MP",
+                track: "Datos & Stats",
+                title: "Estadística descriptiva con Python: cálculo práctico de media, mediana y varianza",
+                concepts: ["np.mean()", "np.median()", "np.var()", "np.std()", "percentiles"],
+                codeLang: "Python · Stats",
+                codeFilename: "09_estadistica_descriptiva.py",
+                codeSnippet: 'import numpy as np\nventas = np.array([120, 135, 128, 490, 140])\nprint(f"Media: {np.mean(ventas):.1f} | Mediana: {np.median(ventas)}")',
+                summary: "Aplicaremos medidas de tendencia central y dispersión sobre conjuntos de datos reales para detectar sesgos, variabilidad y valores atípicos.",
+                objectives: [
+                    "Cálculo e interpretación de media aritmética frente a mediana ante outliers.",
+                    "Medidas de dispersión: rango, varianza (var) y desviación estándar (std).",
+                    "Cuartiles y percentiles con NumPy y el módulo estándar statistics."
+                ]
+            },
+            {
+                id: 10,
+                week: 3,
+                pillNumber: "10",
+                dayName: "JUEVES",
+                shortDay: "JUE",
+                dateStr: "10/12/2026",
+                dayNumber: "10",
+                monthShort: "DIC",
+                isoDate: "20261210",
+                speaker: "David Martín",
+                initials: "DM",
+                track: "Datos & Stats",
+                title: "Visualización de distribuciones: primeros pasos con la librería Matplotlib",
+                concepts: ["plt.hist()", "plt.boxplot()", "subplots", "títulos y ejes"],
+                codeLang: "Python · Matplotlib",
+                codeFilename: "10_matplotlib_distribuciones.py",
+                codeSnippet: 'import matplotlib.pyplot as plt\nplt.hist(datos, bins=15, color="#38BDF8", edgecolor="black")\nplt.title("Distribución de Frecuencias")\nplt.show()',
+                summary: "Aprenderemos a transformar números en gráficos claros e informativos para explorar la forma y dispersión de nuestras distribuciones de datos.",
+                objectives: [
+                    "Anatomía de una figura en Matplotlib: Figure, Axes y Pyplot.",
+                    "Creación de histogramas (hist) y diagramas de caja (boxplot).",
+                    "Personalización visual: etiquetas, leyendas, colores y exportación de gráficos."
+                ]
+            },
+
+            // --- SEMANA 4 ---
+            {
+                id: 11,
+                week: 4,
+                pillNumber: "11",
+                dayName: "LUNES",
+                shortDay: "LUN",
+                dateStr: "14/12/2026",
+                dayNumber: "14",
+                monthShort: "DIC",
+                isoDate: "20261214",
+                speaker: "Luisa",
+                initials: "LU",
+                track: "Web & APIs",
+                title: "El protocolo HTTP y peticiones GET con la librería requests",
+                concepts: ["HTTP GET", "status_code", "headers", "params", "requests"],
+                codeLang: "Python · Requests",
+                codeFilename: "11_peticiones_http.py",
+                codeSnippet: 'import requests\nresp = requests.get("https://api.ejemplo.com/items", params={"limit": 5})\nif resp.status_code == 200:\n    print(resp.headers["Content-Type"])',
+                summary: "Comprenderemos cómo viaja la información por la web mediante el protocolo HTTP y realizaremos nuestras primeras consultas automatizadas desde Python.",
+                objectives: [
+                    "Ciclo petición-respuesta HTTP, cabeceras (headers) y códigos de estado (200, 404, 500).",
+                    "Uso de la librería requests para ejecutar peticiones GET con query params.",
+                    "Gestión de timeouts y verificación de respuestas exitosas (.raise_for_status())."
+                ]
+            },
+            {
+                id: 12,
+                week: 4,
+                pillNumber: "12",
+                dayName: "MARTES",
+                shortDay: "MAR",
+                dateStr: "15/12/2026",
+                dayNumber: "15",
+                monthShort: "DIC",
+                isoDate: "20261215",
+                speaker: "Sebastián Girón",
+                initials: "SG",
+                track: "Web & APIs",
+                title: "Profundización en JSON: parsing, navegación por diccionarios anidados y extracción de datos complejos",
+                concepts: ["json.loads()", "resp.json()", ".get()", "estructuras anidadas"],
+                codeLang: "Python · JSON",
+                codeFilename: "12_json_anidado.py",
+                codeSnippet: 'data = resp.json()\nfor usuario in data.get("resultados", []):\n    ciudad = usuario.get("direccion", {}).get("ciudad", "N/A")\n    print(usuario["nombre"], "->", ciudad)',
+                summary: "Dominaremos el estándar de intercambio de datos de la web moderna, extrayendo información limpia de respuestas JSON profundamente anidadas.",
+                objectives: [
+                    "Serialización y deserialización entre cadenas JSON y objetos Python (loads / dumps).",
+                    "Navegación segura por listas de diccionarios anidados usando .get().",
+                    "Normalización y extracción de campos clave para su posterior análisis."
+                ]
+            },
+            {
+                id: 13,
+                week: 4,
+                pillNumber: "13",
+                dayName: "MIÉRCOLES",
+                shortDay: "MIÉ",
+                dateStr: "16/12/2026",
+                dayNumber: "16",
+                monthShort: "DIC",
+                isoDate: "20261216",
+                speaker: "Sebastián Gómez",
+                initials: "SG",
+                track: "Web & APIs",
+                title: "Taller práctico de web scraping: inspección del DOM y extracción de listas iterativas",
+                concepts: ["HTML / DOM", "BeautifulSoup", "select()", "find_all()"],
+                codeLang: "Python · BeautifulSoup",
+                codeFilename: "13_web_scraping.py",
+                codeSnippet: 'from bs4 import BeautifulSoup\nsoup = BeautifulSoup(html, "html.parser")\ntitulos = [h2.get_text(strip=True) for h2 in soup.select("article.card h2")]',
+                summary: "Aprenderemos a inspeccionar la estructura HTML de una página web y extraer listados completos de información de forma estructurada y ética.",
+                objectives: [
+                    "Inspección del árbol DOM y selectores CSS desde las DevTools del navegador.",
+                    "Parseo de documentos HTML con BeautifulSoup4.",
+                    "Iteración sobre tarjetas o filas de tablas para construir datasets limpios."
+                ]
+            },
+            {
+                id: 14,
+                week: 4,
+                pillNumber: "14",
+                dayName: "JUEVES",
+                shortDay: "JUE",
+                dateStr: "17/12/2026",
+                dayNumber: "17",
+                monthShort: "DIC",
+                isoDate: "20261217",
+                speaker: "Kira",
+                initials: "KI",
+                track: "Git & SQL",
+                title: "Refuerzo de GitFlow y resolución de conflictos de fusión (merge conflicts) en repositorios locales",
+                concepts: ["git flow", "feature/*", "git merge", "conflict markers"],
+                codeLang: "Bash · Git",
+                codeFilename: "14_gitflow_conflictos.sh",
+                codeSnippet: 'git checkout develop\ngit checkout -b feature/nueva-pildora\n# Tras editar en paralelo:\ngit merge develop  # Resolver <<<<<<< HEAD y hacer commit',
+                summary: "Consolidaremos el flujo de trabajo profesional con ramas y perderemos el miedo a resolver conflictos de código en equipo sin perder cambios.",
+                objectives: [
+                    "Estructura de ramas en GitFlow: main, develop, feature, release y hotfix.",
+                    "Anatomía de un conflicto de fusión (HEAD vs. rama entrante).",
+                    "Estrategias paso a paso para resolver conflictos y validar el historial limpio."
+                ]
+            },
+
+            // --- SEMANA 5 ---
+            {
+                id: 15,
+                week: 5,
+                pillNumber: "15",
+                dayName: "LUNES",
+                shortDay: "LUN",
+                dateStr: "21/12/2026",
+                dayNumber: "21",
+                monthShort: "DIC",
+                isoDate: "20261221",
+                speaker: "William",
+                initials: "WI",
+                track: "Datos & Stats",
+                title: "Estructuras de Pandas: creación e indexación de Series y DataFrames",
+                concepts: ["pd.Series", "pd.DataFrame", ".loc[]", ".iloc[]", "read_csv()"],
+                codeLang: "Python · Pandas",
+                codeFilename: "15_pandas_estructuras.py",
+                codeSnippet: 'import pandas as pd\ndf = pd.DataFrame({"curso": ["Python", "SQL"], "horas": [12, 8]})\nprint(df.loc[df["horas"] > 10, ["curso", "horas"]])',
+                summary: "Nos sumergiremos en la librería reina del análisis de datos en Python, dominando la creación, exploración e indexación precisa de tablas.",
+                objectives: [
+                    "Diferencias entre Series (1D) y DataFrames (2D) y carga desde archivos CSV.",
+                    "Exploración inicial rápida: .head(), .info(), .describe() y .shape.",
+                    "Selección e indexación exacta por etiquetas (.loc) y por posición entera (.iloc)."
+                ]
+            },
+            {
+                id: 16,
+                week: 5,
+                pillNumber: "16",
+                dayName: "MARTES",
+                shortDay: "MAR",
+                dateStr: "22/12/2026",
+                dayNumber: "22",
+                monthShort: "DIC",
+                isoDate: "20261222",
+                speaker: "Francisco",
+                initials: "FR",
+                track: "Datos & Stats",
+                title: "Limpieza de datos práctica: identificación, filtrado y tratamiento de valores nulos (ETL básico)",
+                concepts: [".isna()", ".dropna()", ".fillna()", ".drop_duplicates()", "ETL"],
+                codeLang: "Python · Pandas ETL",
+                codeFilename: "16_limpieza_etl.py",
+                codeSnippet: 'df_limpio = (\n    df.drop_duplicates()\n      .assign(ingresos=lambda x: x["ingresos"].fillna(x["ingresos"].median()))\n      .dropna(subset=["id_cliente"])\n)',
+                summary: "Construiremos un pipeline básico de depuración de datos para transformar tablas crudas e incompletas en conjuntos fiables listos para análisis.",
+                objectives: [
+                    "Diagnóstico de calidad del dato: detección de NaN/None y filas duplicadas.",
+                    "Criterios para eliminar registros (.dropna) frente a imputar valores (.fillna).",
+                    "Encadenamiento de transformaciones limpias en un flujo ETL reproducible."
+                ]
+            },
+
+            // --- SEMANA 6 (ENERO 2027) ---
+            {
+                id: 17,
+                week: 6,
+                pillNumber: "17",
+                dayName: "LUNES",
+                shortDay: "LUN",
+                dateStr: "11/01/2027",
+                dayNumber: "11",
+                monthShort: "ENE",
+                isoDate: "20270111",
+                speaker: "Saray",
+                initials: "SA",
+                track: "Git & SQL",
+                title: "Fundamentos de bases de datos relacionales y sintaxis SQL básica",
+                concepts: ["Tablas", "PK / FK", "CREATE TABLE", "SELECT", "INSERT"],
+                codeLang: "SQL",
+                codeFilename: "17_fundamentos_sql.sql",
+                codeSnippet: 'CREATE TABLE alumnos (\n    id INT PRIMARY KEY,\n    nombre VARCHAR(100) NOT NULL,\n    especialidad VARCHAR(50)\n);\nSELECT nombre, especialidad FROM alumnos;',
+                summary: "Iniciamos el año entendiendo cómo se estructuran los datos persistentes en motores relacionales y escribiendo nuestras primeras sentencias SQL.",
+                objectives: [
+                    "Modelo relacional: tablas, registros, columnas, claves primarias (PK) y foráneas (FK).",
+                    "Tipos de datos SQL fundamentales (INT, VARCHAR, DATE, DECIMAL).",
+                    "Sintaxis básica de consulta con SELECT y manipulación inicial de registros."
+                ]
+            },
+            {
+                id: 18,
+                week: 6,
+                pillNumber: "18",
+                dayName: "MARTES",
+                shortDay: "MAR",
+                dateStr: "12/01/2027",
+                dayNumber: "12",
+                monthShort: "ENE",
+                isoDate: "20270112",
+                speaker: "Doramas",
+                initials: "DO",
+                track: "Git & SQL",
+                title: "Consultas SQL: filtrado y agrupaciones prácticas (Select, Where, Group By)",
+                concepts: ["WHERE", "GROUP BY", "HAVING", "COUNT / SUM / AVG", "ORDER BY"],
+                codeLang: "SQL",
+                codeFilename: "18_consultas_agrupaciones.sql",
+                codeSnippet: 'SELECT departamento, COUNT(*) AS total, AVG(salario) AS media\nFROM empleados\nWHERE activo = 1\nGROUP BY departamento\nHAVING COUNT(*) >= 3;',
+                summary: "Aprenderemos a extraer métricas de negocio directamente desde la base de datos filtrando condiciones y resumiendo grupos de registros.",
+                objectives: [
+                    "Filtrado preciso con WHERE, operadores IN, BETWEEN, LIKE y manejo de NULL.",
+                    "Funciones de agregación: COUNT(), SUM(), AVG(), MIN() y MAX().",
+                    "Agrupación con GROUP BY, filtrado de grupos con HAVING y ordenación con ORDER BY."
+                ]
+            },
+            {
+                id: 19,
+                week: 6,
+                pillNumber: "19",
+                dayName: "MIÉRCOLES",
+                shortDay: "MIÉ",
+                dateStr: "13/01/2027",
+                dayNumber: "13",
+                monthShort: "ENE",
+                isoDate: "20270113",
+                speaker: "Adolfo",
+                initials: "AD",
+                track: "Web & APIs",
+                title: "Arquitectura cliente-servidor y anatomía de una petición a una API REST",
+                concepts: ["Cliente-Servidor", "REST", "URI / Endpoints", "Headers & Body", "Stateless"],
+                codeLang: "HTTP · REST",
+                codeFilename: "19_anatomia_rest.http",
+                codeSnippet: 'GET /api/v1/proyectos/42?detalle=completo HTTP/1.1\nHost: api.plataforma.dev\nAccept: application/json\nAuthorization: Bearer <token_jwt>',
+                summary: "Desgranaremos cómo se comunican aplicaciones frontend, móviles y servicios backend mediante los principios de la arquitectura REST.",
+                objectives: [
+                    "Modelo cliente-servidor, principio stateless y recursos identificados por URIs.",
+                    "Partes de una petición HTTP: método, ruta, query params, cabeceras y cuerpo (payload).",
+                    "Interpretación de respuestas JSON y códigos de estado HTTP estándar."
+                ]
+            },
+            {
+                id: 20,
+                week: 6,
+                pillNumber: "20",
+                dayName: "JUEVES",
+                shortDay: "JUE",
+                dateStr: "14/01/2027",
+                dayNumber: "14",
+                monthShort: "ENE",
+                isoDate: "20270114",
+                speaker: "Jean Paul",
+                initials: "JP",
+                track: "Web & APIs",
+                title: "Endpoints y simulación de métodos HTTP (GET, POST, PUT, DELETE)",
+                concepts: ["GET", "POST", "PUT", "DELETE", "CRUD", "FastAPI / Swagger"],
+                codeLang: "Python · FastAPI",
+                codeFilename: "20_metodos_http_crud.py",
+                codeSnippet: 'from fastapi import FastAPI\napp = FastAPI()\n\n@app.post("/tareas", status_code=201)\ndef crear_tarea(tarea: dict):\n    return {"mensaje": "Creada", "data": tarea}',
+                summary: "Cerraremos el itinerario poniendo en práctica las operaciones CRUD completas sobre endpoints REST simulando peticiones GET, POST, PUT y DELETE.",
+                objectives: [
+                    "Correspondencia entre operaciones CRUD y verbos HTTP (GET, POST, PUT, DELETE).",
+                    "Diseño de rutas RESTful limpias y envío de payloads JSON en POST/PUT.",
+                    "Pruebas interactivas de endpoints mediante clientes HTTP y documentación OpenAPI."
+                ]
+            }
+        ];
+
+        let currentView = 'grid';
+        let selectedWeek = 'all';
+        let selectedTrack = 'all';
+
+        // Devuelve las sesiones filtradas según semana y bloque temático activos
+        function getFilteredSessions() {
+            return sessionsData.filter(session => {
+                const matchWeek = selectedWeek === 'all' || session.week === Number(selectedWeek);
+                const matchTrack = selectedTrack === 'all' || session.track === selectedTrack;
+                return matchWeek && matchTrack;
+            });
+        }
+
+        // Renderiza los botones de filtro (Semanas y Bloques)
+        function renderFilters() {
+            const weekContainer = document.getElementById('week-filters');
+            const trackContainer = document.getElementById('track-filters');
+
+            const weekOptions = [
+                { id: 'all', label: 'Todas (6)' },
+                { id: '1', label: 'Sem 1' },
+                { id: '2', label: 'Sem 2' },
+                { id: '3', label: 'Sem 3' },
+                { id: '4', label: 'Sem 4' },
+                { id: '5', label: 'Sem 5' },
+                { id: '6', label: 'Sem 6 (Ene)' }
+            ];
+
+            weekContainer.innerHTML = weekOptions.map(opt => {
+                const isActive = String(selectedWeek) === opt.id;
+                const activeClasses = isActive
+                    ? "bg-sky-500/20 text-sky-300 border-sky-500/40 font-semibold"
+                    : "bg-slate-950/70 text-slate-400 border-slate-800 hover:text-slate-200 hover:border-slate-700";
+                return `
+                    <button onclick="setWeekFilter('${opt.id}')" class="px-2.5 py-1 rounded-lg text-xs border transition-all shrink-0 cursor-pointer ${activeClasses}">
+                        ${opt.label}
+                    </button>
+                `;
+            }).join('');
+
+            const trackOptions = [
+                { id: 'all', label: 'Todos los bloques', dot: null },
+                { id: 'Python Core', label: 'Python Core', dot: 'bg-sky-400' },
+                { id: 'Datos & Stats', label: 'Datos & Stats', dot: 'bg-emerald-400' },
+                { id: 'Web & APIs', label: 'Web & APIs', dot: 'bg-violet-400' },
+                { id: 'Git & SQL', label: 'Git & SQL', dot: 'bg-amber-400' }
+            ];
+
+            trackContainer.innerHTML = trackOptions.map(opt => {
+                const isActive = selectedTrack === opt.id;
+                const activeClasses = isActive
+                    ? "bg-slate-800 text-white border-slate-600 font-semibold"
+                    : "bg-slate-950/70 text-slate-400 border-slate-800 hover:text-slate-200 hover:border-slate-700";
+                return `
+                    <button onclick="setTrackFilter('${opt.id}')" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs border transition-all shrink-0 cursor-pointer ${activeClasses}">
+                        ${opt.dot ? `<span class="w-1.5 h-1.5 rounded-full ${opt.dot}"></span>` : ''}
+                        <span>${opt.label}</span>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function setWeekFilter(weekId) {
+            selectedWeek = weekId;
+            renderFilters();
+            renderSessions();
+        }
+
+        function setTrackFilter(trackId) {
+            selectedTrack = trackId;
+            renderFilters();
+            renderSessions();
+        }
+
+        function resetFilters() {
+            selectedWeek = 'all';
+            selectedTrack = 'all';
+            renderFilters();
+            renderSessions();
+        }
+
+        // Genera el banner del Receso Navideño entre la Semana 5 y la Semana 6
+        function renderHolidayBreakBanner() {
+            return `
+                <div class="week-section relative overflow-hidden rounded-2xl border border-amber-400/25 bg-gradient-to-r from-slate-950 via-amber-950/20 to-slate-950 p-5 sm:p-6 shadow-inner">
+                    <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <div class="flex items-center gap-4 text-center sm:text-left">
+                            <div class="w-12 h-12 rounded-2xl bg-amber-400/15 border border-amber-400/30 flex items-center justify-center text-amber-300 shrink-0">
+                                <i data-lucide="sparkles" class="w-6 h-6"></i>
+                            </div>
+                            <div>
+                                <div class="inline-flex items-center gap-2 text-xs font-mono font-bold uppercase tracking-wider text-amber-300 mb-0.5">
+                                    <span>PAUSA PROGRAMADA · FIN DE AÑO</span>
+                                </div>
+                                <h3 class="text-base sm:text-lg font-extrabold text-white">
+                                    Receso Navideño (23/12/2026 – 10/01/2027)
+                                </h3>
+                                <p class="text-xs sm:text-sm text-slate-400 mt-0.5">
+                                    Descanso festivo tras completar el bloque de Python y Pandas. Retomamos el lunes 11 de enero con SQL y APIs REST.
+                                </p>
+                            </div>
+                        </div>
+                        <span class="px-3.5 py-1.5 rounded-xl bg-slate-900/90 border border-slate-800 font-mono text-xs font-semibold text-slate-300 shrink-0">
+                            19 días de pausa
+                        </span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Genera una tarjeta individual en vista Grid
+        function renderGridCard(session) {
+            const theme = trackThemes[session.track];
+            return `
+                <article onclick="openModal(${session.id})" class="session-card group relative flex flex-col justify-between bg-slate-950/80 hover:bg-slate-900/95 border border-slate-800/90 ${theme.cardHoverBorder} rounded-2xl p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer overflow-hidden">
+                    
+                    <!-- Línea superior de color -->
+                    <div class="absolute top-0 left-0 right-0 h-1 ${theme.accentBar} opacity-80 group-hover:opacity-100 transition-opacity"></div>
+
+                    <div>
+                        <!-- Fila superior: Día + Fecha -->
+                        <div class="flex items-center justify-between gap-2 mb-4">
+                            <span class="px-2.5 py-1 rounded-lg text-[11px] font-extrabold tracking-wider uppercase border ${theme.badgeBg} ${theme.badgeText} ${theme.badgeBorder}">
+                                ${session.dayName}
+                            </span>
+                            <div class="flex items-center gap-1.5 font-mono text-xs font-semibold text-slate-300 bg-slate-900 px-2.5 py-1 rounded-lg border border-slate-800">
+                                <i data-lucide="calendar" class="w-3.5 h-3.5 ${theme.iconColor}"></i>
+                                <span>${session.dateStr}</span>
+                            </div>
+                        </div>
+
+                        <!-- Número de píldora y bloque temático -->
+                        <div class="flex items-center justify-between text-[11px] font-mono text-slate-400 mb-2">
+                            <span>PÍLDORA #${session.pillNumber}</span>
+                            <span class="inline-flex items-center gap-1.5 text-slate-300">
+                                <span class="w-1.5 h-1.5 rounded-full ${theme.dotColor}"></span>
+                                ${session.track}
+                            </span>
+                        </div>
+
+                        <!-- Título principal de la píldora -->
+                        <h3 class="text-base sm:text-[17px] font-bold text-white leading-snug group-hover:text-amber-300 transition-colors mb-4">
+                            ${session.title}
+                        </h3>
+
+                        <!-- Etiquetas de conceptos clave -->
+                        <div class="flex flex-wrap gap-1.5 mb-5">
+                            ${session.concepts.map(concept => `
+                                <span class="px-2 py-0.5 rounded-md bg-slate-900 text-slate-300 border border-slate-800 font-mono text-[11px]">
+                                    ${concept}
+                                </span>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <!-- Pie de tarjeta: Ponente + Acción -->
+                    <div class="pt-3.5 border-t border-slate-800/80 flex items-center justify-between">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-xl bg-gradient-to-br ${theme.avatarBg} flex items-center justify-center text-slate-950 font-extrabold text-xs shadow-md shrink-0">
+                                ${session.initials}
+                            </div>
+                            <div>
+                                <div class="text-[10px] uppercase tracking-wider text-slate-500 font-semibold">Ponente</div>
+                                <div class="text-sm font-bold text-slate-100 leading-tight">${session.speaker}</div>
+                            </div>
+                        </div>
+
+                        <div class="w-8 h-8 rounded-lg bg-slate-900 group-hover:bg-slate-800 border border-slate-800 flex items-center justify-center text-slate-400 group-hover:text-white transition-colors" title="Ver detalles">
+                            <i data-lucide="arrow-up-right" class="w-4 h-4"></i>
+                        </div>
+                    </div>
+                </article>
+            `;
+        }
+
+        // Genera una fila en vista Agenda Cronológica
+        function renderTimelineRow(session) {
+            const theme = trackThemes[session.track];
+            return `
+                <article onclick="openModal(${session.id})" class="session-card group relative bg-slate-950/80 hover:bg-slate-900/95 border border-slate-800/90 ${theme.cardHoverBorder} rounded-2xl p-5 transition-all duration-200 cursor-pointer overflow-hidden">
+                    <div class="absolute top-0 bottom-0 left-0 w-1.5 ${theme.accentBar}"></div>
+                    
+                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pl-2">
+                        
+                        <!-- Bloque Fecha y Día -->
+                        <div class="flex items-center gap-3.5 lg:w-72 shrink-0">
+                            <div class="w-14 h-14 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col items-center justify-center shrink-0">
+                                <span class="text-[10px] font-bold uppercase tracking-wider ${theme.iconColor}">${session.monthShort}</span>
+                                <span class="text-xl font-extrabold text-white font-mono leading-none mt-0.5">${session.dayNumber}</span>
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-1.5 mb-1">
+                                    <span class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border ${theme.badgeBg} ${theme.badgeText} ${theme.badgeBorder}">
+                                        ${session.dayName}
+                                    </span>
+                                    <span class="px-2 py-0.5 rounded-md text-[10px] font-mono font-semibold bg-slate-900 text-slate-300 border border-slate-800">
+                                        Sem ${session.week}
+                                    </span>
+                                </div>
+                                <div class="font-mono text-xs text-slate-400">${session.dateStr} · Píldora #${session.pillNumber}</div>
+                            </div>
+                        </div>
+
+                        <!-- Bloque Título y Conceptos -->
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 text-[11px] font-mono text-slate-400 mb-1">
+                                <span class="w-1.5 h-1.5 rounded-full ${theme.dotColor}"></span>
+                                <span>${session.track}</span>
+                            </div>
+                            <h3 class="text-base sm:text-lg font-bold text-white group-hover:text-amber-300 transition-colors mb-1.5">
+                                ${session.title}
+                            </h3>
+                            <p class="text-xs sm:text-sm text-slate-400 line-clamp-1 mb-2.5">${session.summary}</p>
+                            <div class="flex flex-wrap gap-1.5">
+                                ${session.concepts.map(concept => `
+                                    <span class="px-2 py-0.5 rounded-md bg-slate-900 text-slate-300 border border-slate-800 font-mono text-[11px]">
+                                        ${concept}
+                                    </span>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <!-- Bloque Ponente y Botón -->
+                        <div class="flex items-center justify-between lg:justify-end gap-4 pt-3.5 lg:pt-0 border-t lg:border-t-0 border-slate-800/80 lg:w-56 shrink-0">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-xl bg-gradient-to-br ${theme.avatarBg} flex items-center justify-center text-slate-950 font-extrabold text-xs shadow-md shrink-0">
+                                    ${session.initials}
+                                </div>
+                                <div>
+                                    <div class="text-[10px] uppercase tracking-wider text-slate-500 font-semibold">Ponente</div>
+                                    <div class="text-sm font-bold text-slate-100">${session.speaker}</div>
+                                </div>
+                            </div>
+                            <span class="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 group-hover:text-white transition-colors">
+                                <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                            </span>
+                        </div>
+                    </div>
+                </article>
+            `;
+        }
+
+        // Renderiza las tarjetas según la vista y filtros activos
+        function renderSessions() {
+            const container = document.getElementById('sessions-container');
+            const filtered = getFilteredSessions();
+
+            // Actualizar contadores dinámicos de cabecera y botón .ICS
+            document.getElementById('stats-sessions-count').textContent = `${filtered.length} ${filtered.length === 1 ? 'Píldora' : 'Píldoras'}`;
+            const uniqueSpeakers = new Set(filtered.map(s => s.speaker)).size;
+            document.getElementById('stats-speakers-count').textContent = `${uniqueSpeakers} ${uniqueSpeakers === 1 ? 'Experto' : 'Expertos'}`;
+            document.getElementById('ics-btn-label').textContent = `Exportar .ICS (${filtered.length})`;
+
+            // Estado vacío si la combinación de filtros no devuelve resultados
+            if (filtered.length === 0) {
+                container.className = "py-12";
+                container.innerHTML = `
+                    <div class="text-center max-w-md mx-auto bg-slate-950/70 border border-slate-800 rounded-3xl p-8">
+                        <div class="w-12 h-12 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 mx-auto mb-4">
+                            <i data-lucide="search-x" class="w-6 h-6"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-1">Sin píldoras en esta combinación</h3>
+                        <p class="text-sm text-slate-400 mb-5">No hay sesiones programadas para el bloque temático seleccionado dentro de esta semana.</p>
+                        <button onclick="resetFilters()" class="px-4 py-2 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/30 text-sm font-semibold transition-colors cursor-pointer">
+                            Mostrar todas las semanas
+                        </button>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            if (currentView === 'grid') {
+                container.className = "space-y-10";
+                const activeWeekNumbers = [...new Set(filtered.map(s => s.week))].sort((a, b) => a - b);
+                
+                let html = '';
+                activeWeekNumbers.forEach(weekNum => {
+                    // Insertar banner de Receso Navideño justo antes de la Semana 6 si se muestran ambas o todas
+                    if (weekNum === 6 && selectedWeek === 'all') {
+                        html += renderHolidayBreakBanner();
+                    }
+
+                    const weekInfo = weeksMeta[weekNum];
+                    const weekSessions = filtered.filter(s => s.week === weekNum);
+                    // Ajustar columnas si la semana tiene 2 sesiones (Semanas 3 y 5) vs 4 sesiones
+                    const gridColsClass = weekSessions.length <= 2
+                        ? "grid-cols-1 md:grid-cols-2"
+                        : "grid-cols-1 md:grid-cols-2 xl:grid-cols-4";
+
+                    html += `
+                        <section class="week-section space-y-4">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-800/70">
+                                <div>
+                                    <div class="flex items-center gap-2.5">
+                                        <span class="px-2.5 py-0.5 rounded-md bg-slate-800 text-amber-300 font-mono text-xs font-bold">
+                                            0${weekInfo.number}
+                                        </span>
+                                        <h2 class="text-lg sm:text-xl font-extrabold text-white tracking-tight">
+                                            ${weekInfo.title}
+                                        </h2>
+                                    </div>
+                                    <p class="text-xs sm:text-sm text-slate-400 mt-1">${weekInfo.subtitle}</p>
+                                </div>
+                                <div class="flex items-center gap-2 self-start sm:self-center">
+                                    <span class="px-3 py-1 rounded-xl bg-slate-950/90 border border-slate-800 font-mono text-xs font-semibold text-slate-300">
+                                        ${weekInfo.dateRange}
+                                    </span>
+                                    <button onclick="downloadWeekICS(${weekNum})" class="no-print p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-emerald-400 transition-colors cursor-pointer" title="Exportar Semana ${weekNum} (.ics)">
+                                        <i data-lucide="calendar-plus" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="grid ${gridColsClass} gap-5">
+                                ${weekSessions.map(session => renderGridCard(session)).join('')}
+                            </div>
+                        </section>
+                    `;
+                });
+
+                container.innerHTML = html;
+            } else {
+                // Vista Agenda Cronológica
+                container.className = "flex flex-col gap-4";
+                let html = '';
+
+                filtered.forEach((session, index) => {
+                    // Insertar banner de Receso Navideño antes de la primera sesión de enero si estamos viendo el programa completo
+                    if (session.week === 6 && selectedWeek === 'all' && (index === 0 || filtered[index - 1].week < 6)) {
+                        html += renderHolidayBreakBanner();
+                    }
+                    html += renderTimelineRow(session);
+                });
+
+                container.innerHTML = html;
+            }
+
+            // Re-inicializar iconos Lucide
+            lucide.createIcons();
+        }
+
+        // Cambiar entre vista por semanas y agenda cronológica
+        function setView(view) {
+            currentView = view;
+            const btnGrid = document.getElementById('btn-view-grid');
+            const btnTimeline = document.getElementById('btn-view-timeline');
+
+            if (view === 'grid') {
+                btnGrid.className = "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all bg-sky-500/20 text-sky-300 border border-sky-500/30 shadow-sm cursor-pointer";
+                btnTimeline.className = "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-slate-200 transition-all cursor-pointer";
+            } else {
+                btnTimeline.className = "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all bg-sky-500/20 text-sky-300 border border-sky-500/30 shadow-sm cursor-pointer";
+                btnGrid.className = "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-slate-200 transition-all cursor-pointer";
+            }
+
+            renderSessions();
+        }
+
+        // Abrir modal con detalle de la sesión
+        function openModal(id) {
+            const session = sessionsData.find(s => s.id === id);
+            if (!session) return;
+
+            const theme = trackThemes[session.track];
+            const modal = document.getElementById('session-modal');
+            const accentBar = document.getElementById('modal-accent-bar');
+            const content = document.getElementById('modal-content');
+
+            accentBar.className = `absolute top-0 left-0 right-0 h-1.5 ${theme.accentBar}`;
+
+            content.innerHTML = `
+                <div class="flex flex-wrap items-center gap-2 mb-4 pr-8">
+                    <span class="px-3 py-1 rounded-lg text-xs font-extrabold uppercase tracking-wider border ${theme.badgeBg} ${theme.badgeText} ${theme.badgeBorder}">
+                        ${session.dayName} · ${session.dateStr}
+                    </span>
+                    <span class="font-mono text-xs text-slate-300 bg-slate-800/90 px-2.5 py-1 rounded-lg">
+                        Semana ${session.week} · Píldora #${session.pillNumber}
+                    </span>
+                    <span class="inline-flex items-center gap-1.5 font-mono text-xs text-slate-400 bg-slate-950 border border-slate-800 px-2.5 py-1 rounded-lg">
+                        <span class="w-1.5 h-1.5 rounded-full ${theme.dotColor}"></span>
+                        ${session.track}
+                    </span>
+                </div>
+
+                <h3 class="text-xl sm:text-2xl font-extrabold text-white leading-snug mb-4">
+                    ${session.title}
+                </h3>
+
+                <!-- Ponente -->
+                <div class="flex items-center gap-3 p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800/90 mb-5">
+                    <div class="w-11 h-11 rounded-xl bg-gradient-to-br ${theme.avatarBg} flex items-center justify-center text-slate-950 font-extrabold text-sm shadow-md shrink-0">
+                        ${session.initials}
+                    </div>
+                    <div>
+                        <div class="text-xs text-slate-400">Impartido por</div>
+                        <div class="text-base font-bold text-white">${session.speaker}</div>
+                    </div>
+                </div>
+
+                <!-- Descripción -->
+                <p class="text-sm text-slate-300 leading-relaxed mb-5">
+                    ${session.summary}
+                </p>
+
+                <!-- Puntos clave -->
+                <div class="mb-5">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2.5">Objetivos clave de aprendizaje</h4>
+                    <ul class="space-y-2">
+                        ${session.objectives.map(obj => `
+                            <li class="flex items-start gap-2.5 text-sm text-slate-200">
+                                <i data-lucide="check-circle-2" class="w-4 h-4 ${theme.iconColor} shrink-0 mt-0.5"></i>
+                                <span>${obj}</span>
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+
+                <!-- Mini snippet de código real del tema -->
+                <div class="bg-slate-950 border border-slate-800 rounded-xl p-3.5 mb-6 font-mono text-xs overflow-x-auto">
+                    <div class="flex items-center justify-between text-slate-500 text-[11px] mb-2 pb-1.5 border-b border-slate-800/80">
+                        <span>${session.codeFilename}</span>
+                        <span>${session.codeLang}</span>
+                    </div>
+                    <pre class="text-sky-300 leading-relaxed"><code>${session.codeSnippet}</code></pre>
+                </div>
+
+                <!-- Botones de acción -->
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button onclick="copySessionInfo(${session.id})" class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-sm transition-colors cursor-pointer">
+                        <i data-lucide="copy" class="w-4 h-4"></i>
+                        <span>Copiar info para compartir</span>
+                    </button>
+                    <button onclick="downloadSingleICS(${session.id})" class="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-100 border border-slate-700 font-semibold text-sm transition-colors cursor-pointer">
+                        <i data-lucide="calendar-plus" class="w-4 h-4 text-emerald-400"></i>
+                        <span>Añadir a mi calendario</span>
+                    </button>
+                </div>
+            `;
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            lucide.createIcons();
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('session-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function closeModalOnBackdrop(event) {
+            if (event.target.id === 'session-modal') {
+                closeModal();
+            }
+        }
+
+        // Cerrar modal con tecla Escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+        });
+
+        // Copiar información formateada al portapapeles (compatible con iframes mediante execCommand)
+        function copySessionInfo(id) {
+            const s = sessionsData.find(item => item.id === id);
+            if (!s) return;
+
+            const formattedText = `🐍 Píldora Formativa #${s.pillNumber} (Semana ${s.week} · ${s.track})\n📅 ${s.dayName} ${s.dateStr}\n👤 Ponente: ${s.speaker}\n📘 Tema: ${s.title}`;
+            
+            const textArea = document.createElement("textarea");
+            textArea.value = formattedText;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-9999px";
+            document.body.appendChild(textArea);
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                showToast('Información de la píldora copiada al portapapeles');
+            } catch (err) {
+                showToast('No se pudo copiar el texto');
+            }
+            
+            document.body.removeChild(textArea);
+        }
+
+        // Descargar imagen PNG del calendario completo
+        async function downloadPNG() {
+            const btn = document.getElementById('btn-download-png');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i><span>Generando imagen...</span>`;
+            lucide.createIcons();
+
+            try {
+                const captureArea = document.getElementById('capture-area');
+                const canvas = await html2canvas(captureArea, {
+                    backgroundColor: '#020617',
+                    scale: 2, // Alta resolución (Retina)
+                    useCORS: true,
+                    logging: false
+                });
+
+                const link = document.createElement('a');
+                const suffix = selectedWeek === 'all' ? 'Completo_6_Semanas' : `Semana_${selectedWeek}`;
+                link.download = `Calendario_Pildoras_${suffix}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                showToast('Imagen PNG descargada correctamente');
+            } catch (error) {
+                console.error('Error al generar PNG:', error);
+                showToast('Hubo un problema al generar la imagen');
+            } finally {
+                btn.innerHTML = originalHTML;
+                lucide.createIcons();
+            }
+        }
+
+        // Generar y descargar archivo .ICS (todas las sesiones filtradas, por semana o individual)
+        function generateICSContent(sessions) {
+            let ics = [
+                'BEGIN:VCALENDAR',
+                'VERSION:2.0',
+                'PRODID:-//Formacion Python Datos Web SQL//Calendario Pildoras 2026-2027//ES',
+                'CALSCALE:GREGORIAN',
+                'METHOD:PUBLISH'
+            ];
+
+            sessions.forEach(s => {
+                ics.push(
+                    'BEGIN:VEVENT',
+                    `UID:pildora-${s.pillNumber}-${s.isoDate}@formacion.local`,
+                    `DTSTAMP:20261116T120000Z`,
+                    `DTSTART:${s.isoDate}T100000`,
+                    `DTEND:${s.isoDate}T110000`,
+                    `SUMMARY:[Píldora #${s.pillNumber} · Sem ${s.week}] ${s.title} (${s.speaker})`,
+                    `DESCRIPTION:Bloque: ${s.track}\\nPonente: ${s.speaker}\\n${s.summary}`,
+                    'END:VEVENT'
+                );
+            });
+
+            ics.push('END:VCALENDAR');
+            return ics.join('\r\n');
+        }
+
+        function triggerICSDownload(content, filename) {
+            const blob = new Blob([content], { type: 'text/calendar;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', filename);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        function downloadFilteredICS() {
+            const filtered = getFilteredSessions();
+            if (filtered.length === 0) return;
+            const content = generateICSContent(filtered);
+            const filename = selectedWeek === 'all' && selectedTrack === 'all'
+                ? 'Programa_Completo_20_Pildoras_2026_2027.ics'
+                : `Pildoras_Seleccion_${filtered.length}_Sesiones.ics`;
+            triggerICSDownload(content, filename);
+            showToast(`Calendario (.ics) con ${filtered.length} sesiones descargado`);
+        }
+
+        function downloadWeekICS(weekNum) {
+            const weekSessions = sessionsData.filter(s => s.week === weekNum);
+            if (weekSessions.length === 0) return;
+            const content = generateICSContent(weekSessions);
+            triggerICSDownload(content, `Semana_0${weekNum}_Pildoras_Formativas.ics`);
+            showToast(`Semana ${weekNum} (${weekSessions.length} sesiones) exportada (.ics)`);
+        }
+
+        function downloadSingleICS(id) {
+            const session = sessionsData.find(s => s.id === id);
+            if (!session) return;
+            const content = generateICSContent([session]);
+            triggerICSDownload(content, `Pildora_${session.pillNumber}_Python_${session.speaker}.ics`);
+            showToast(`Sesión de ${session.speaker} exportada (.ics)`);
+        }
+
+        // Mostrar notificación emergente
+        let toastTimeout;
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-message');
+            toastMsg.textContent = message;
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        // Inicialización al cargar la página
+        window.addEventListener('DOMContentLoaded', () => {
+            renderFilters();
+            renderSessions();
+        });
+    </script>
+</body>
+</html>
